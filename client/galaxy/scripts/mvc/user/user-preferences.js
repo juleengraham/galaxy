@@ -99,6 +99,15 @@ const Model = Backbone.Model.extend({
                 submit_title: "Create a new key",
                 submit_icon: "fa-check"
             },
+            external_ids: {
+                title: _l("Manage External Identities"),
+                description: _l(
+                    "Manage your external accounts that are connected to your Galaxy account."
+                ),
+                icon: "fa-id-card",
+                /*submit_title: "Create a new key",
+                submit_icon: "fa-check"*/
+            },
             toolbox_filters: {
                 title: _l("Manage Toolbox filters"),
                 description: _l("Customize your Toolbox by displaying or omitting sets of Tools."),
@@ -183,6 +192,7 @@ const View = Backbone.View.extend({
             this._addLink("make_data_private");
             this._addLink("api_key");
             this._addLink("cloud_auth");
+            this._addLink("external_ids");
             if (config.enable_openid) {
                 this._addLink("genomespace");
             }

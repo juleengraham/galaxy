@@ -52,6 +52,7 @@ class OIDC(JSAppLauncher):
 
     @web.expose
     def callback(self, trans, provider, **kwargs):
+        print(kwargs)
         user = trans.user.username if trans.user is not None else 'anonymous'
         if not bool(kwargs):
             log.error("OIDC callback received no data for provider `{}` and user `{}`".format(provider, user))
@@ -95,3 +96,11 @@ class OIDC(JSAppLauncher):
         if redirect_url is None:
             redirect_url = url_for('/')
         return trans.response.send_redirect(redirect_url)
+
+    ###
+    # @wweb.expose
+    #def openidconnect_auth(self, trans, **kwd):
+    #    print(kwd)
+    #    #can redirect in controller
+    #    return trans.show_message("Processed token received. %s" % token)
+    #    #trans.redirect

@@ -169,8 +169,6 @@ export default {
             svc.saveIdentity(idp)
                 .then(response => {
                     if (response.data.redirect_uri) {
-                        //window.location.reload();
-                        //this.redirect = window.location.href;
                         window.location = response.data.redirect_uri;
                     }
                     // Else do something intelligent or maybe throw an error -- what else does this endpoint possibly return?
@@ -180,9 +178,6 @@ export default {
                     const message = error.response.data && error.response.data.err_msg;
                     this.messageText = message || "Login failed for an unknown reason.";
                 })
-                /*.finally(() => {
-                    window.location.href = currentUrl;
-                })*/;
         },
         setError(msg) {
             return err => {
@@ -195,55 +190,6 @@ export default {
         this.loadIdentities();
     }
 };
-
-/*
-    data() {
-
-        return {
-            login: null,
-            password: null,
-            url: null,
-            provider: null,
-            messageText: null,
-            messageVariant: null,
-            
-
-            allowUserCreation: galaxy.config.allow_user_creation,
-            session_csrf_token: galaxy.session_csrf_token,
-            
-        };
-    },
-    methods: {
-        toggleLogin: function() {
-            if (this.$root.toggleLogin) {
-                this.$root.toggleLogin();
-            }
-        },
-        submitGalaxyLogin: function(method) {
-            const rootUrl = getAppRoot();
-            axios
-                .post(`${rootUrl}user/login`, this.$data)
-                .then(response => {
-                    if (response.data.message && response.data.status) {
-                        alert(response.data.message);
-                    }
-                    if (response.data.expired_user) {
-                        window.location = `${rootUrl}root/login?expired_user=${response.data.expired_user}`;
-                    } else if (response.data.redirect) {
-                        window.location = encodeURI(response.data.redirect);
-                    } else {
-                        window.location = `${rootUrl}`;
-                    }
-                })
-                .catch(error => {
-                    this.messageVariant = "danger";
-                    const message = error.response.data && error.response.data.err_msg;
-                    this.messageText = message || "Login failed for an unknown reason.";
-                });
-        },
-        
-        */
-
 
 
 </script>

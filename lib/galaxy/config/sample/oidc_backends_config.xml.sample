@@ -85,6 +85,15 @@ Please mind `http` and `https`.
         <prompt>consent</prompt>
     </provider>
 
+    <!-- Documentation: https://www.cilogon.org/oidc -->
+    <provider name="CILogon">
+        <client_id> ... </client_id>
+        <client_secret> ... </client_secret>
+        <redirect_uri>http://localhost:8080/authnz/cilogon/callback</redirect_uri>
+
+        <prompt>consent</prompt>
+    </provider>
+
     <provider name="Custos">
         <url> ... </url>
         <client_id> ... </client_id>
@@ -100,6 +109,7 @@ Please mind `http` and `https`.
         <!-- (Optional) Override the default idp hint -->
         <!-- <idphint>cilogon</idphint> -->
     </provider>
+    
     <!-- Documentation: https://galaxyproject.org/authnz/config/oidc/idps/elixir-aai  -->
     <provider name="Elixir">
         <client_id>...</client_id>

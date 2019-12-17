@@ -41,7 +41,7 @@
             </div>
 
             <div class="col col-lg-6">
-                <!--<div class="cilogon-prompt">
+                <div class="cilogon-prompt">
                     <h2>Use your existing institutional login</h2>
                     <span class="hint">e.g., university, lab, facility, project</span>
                 </div>
@@ -55,7 +55,7 @@
 
                 <b-button class="d-block mt-3" @click="submitCILogon()">
                     <i v-bind:class="oidc_idps_icons[idp]" /> Sign in with CILogon
-                </b-button>-->
+                </b-button>
 
                 <p>Galaxy uses CILogon to enable you to Log In from this organization. 
                     By clicking Continue, you agree to the <a href="https://ca.cilogon.org/policy/privacy">
@@ -63,7 +63,7 @@
                     affiliation with CILogon and Galaxy. You also agree for CILogon to issue a certificate 
                     that allows Galaxy to act on your behalf.</p>
 
-                <div v-for="idp in oidc_idps" :key="idp" style="margin:0.5em">
+                <!--<div v-for="idp in oidc_idps" :key="idp" style="margin:0.5em">
                     <span v-if="oidc_idps_icons[idp]">
                         <img v-bind:src="oidc_idps_icons[idp]" height="45" v-bind:alt="idp" />
                     </span>
@@ -73,16 +73,14 @@
                             {{ idp.charAt(0).toUpperCase() + idp.slice(1) }}
                         </b-button>
                     </span>
-                </div>
+                </div>-->
 
-                <!--
                 <div>
                     <b-button v-for="idp in oidc_idps" :key="idp" class="d-block mt-3" @click="submitOIDCLogin(idp)">
                         <i v-bind:class="oidc_idps_icons[idp]" /> Sign in with
                         {{ idp.charAt(0).toUpperCase() + idp.slice(1) }}
                     </b-button>
                 </div>
-                -->
             </div>
             <div v-if="show_welcome_with_login" class="col">
                 <b-embed type="iframe" :src="welcome_url" aspect="1by1" />

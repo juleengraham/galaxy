@@ -30,7 +30,6 @@ from .psa_authnz import (
 
 log = logging.getLogger(__name__)
 
-
 class AuthnzManager(object):
 
     def __init__(self, app, oidc_config_file, oidc_backends_config_file):
@@ -96,24 +95,20 @@ class AuthnzManager(object):
                     log.error("Could not find a node attribute 'name'; skipping the node '{}'.".format(child.tag))
                     continue
                 idp = child.get('name').lower()
-                print ('child idp: ', idp)
                 if idp in BACKENDS_NAME:
                     self.oidc_backends_config[idp] = self._parse_idp_config(child)
                     self.oidc_backends_implementation[idp] = 'psa'
                     self.app.config.oidc.append(idp)
                 elif (idp == 'custos' or idp == 'cilogon'):
                     self.oidc_backends_config[idp] = self._parse_custos_config(child)
-                    self.oidc_backends_implementation[idp] = idp
+                    self.oidc_backends_implementation[idp] = 'custos'
                     self.app.config.oidc.append(idp)
-                    print ('self.oidc_backends_config: ', self.oidc_backends_config)
             if len(self.oidc_backends_config) == 0:
                 raise ParseError("No valid provider configuration parsed.")
         except ImportError:
             raise
         except ParseError as e:
             raise ParseError("Invalid configuration at `{}`: {} -- unable to continue.".format(config_file, e))
-        print ('\n\n\n\n\n\n\n\n\n\n\n\nOIDC configs: ')
-        print(self.oidc_backends_config)
 
     def _parse_idp_config(self, config_xml):
         rtv = {
@@ -147,13 +142,13 @@ class AuthnzManager(object):
                 return k.lower()
         return None
 
-    def _get_authnz_backend(self, provider):
+    def _get_authnz_backend(self, provider, idphint=None):
         unified_provider_name = self._unify_provider_name(provider)
         if unified_provider_name in self.oidc_backends_config:
             provider = unified_provider_name
             identity_provider_class = self._get_identity_provider_class(self.oidc_backends_implementation[provider])
             try:
-                return True, "", identity_provider_class(unified_provider_name, self.oidc_config, self.oidc_backends_config[unified_provider_name])
+                return True, "", identity_provider_class(unified_provider_name, self.oidc_config, self.oidc_backends_config[unified_provider_name], idphint=idphint)
             except Exception as e:
                 log.exception('An error occurred when loading {}'.format(identity_provider_class.__name__))
                 return False, unicodify(e), None
@@ -233,7 +228,7 @@ class AuthnzManager(object):
             raise exceptions.ItemAccessibilityException(msg)
         return qres
 
-    def authenticate(self, provider, trans):
+    def authenticate(self, provider, trans, idphint=None):
         """
         :type provider: string
         :param provider: set the name of the identity provider to be
@@ -243,18 +238,18 @@ class AuthnzManager(object):
         :return: an identity provider specific authentication redirect URI.
         """
         try:
-            success, message, backend = self._get_authnz_backend(provider)
+            success, message, backend = self._get_authnz_backend(provider, idphint=idphint)
             if success is False:
                 return False, message, None
-            return True, "Redirecting to the `{}` identity provider for authentication".format(provider), backend.authenticate(trans)
+            return True, "Redirecting to the `{}` identity provider for authentication".format(provider), backend.authenticate(trans, idphint)
         except Exception:
             msg = 'An error occurred when authenticating a user on `{}` identity provider'.format(provider)
             log.exception(msg)
             return False, msg, None
 
-    def callback(self, provider, state_token, authz_code, trans, login_redirect_url):
+    def callback(self, provider, state_token, authz_code, trans, login_redirect_url, idphint=None):
         try:
-            success, message, backend = self._get_authnz_backend(provider)
+            success, message, backend = self._get_authnz_backend(provider, idphint=idphint)
             if success is False:
                 return False, message, (None, None)
             return True, message, backend.callback(state_token, authz_code, trans, login_redirect_url)
@@ -264,9 +259,9 @@ class AuthnzManager(object):
             log.exception(msg)
             return False, msg, (None, None)
 
-    def disconnect(self, provider, trans, disconnect_redirect_url=None):
+    def disconnect(self, provider, trans, disconnect_redirect_url=None, idphint=None):
         try:
-            success, message, backend = self._get_authnz_backend(provider)
+            success, message, backend = self._get_authnz_backend(provider, idphint=idphint)
             if success is False:
                 return False, message, None
             return backend.disconnect(provider, trans, disconnect_redirect_url)

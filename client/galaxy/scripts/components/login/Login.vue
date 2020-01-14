@@ -216,32 +216,9 @@ export default {
         },
         submitCILogon: function() {
             const rootUrl = getAppRoot();
-            const cilogon_redirect_uri = "http://localhost:8080/authnz/cilogon/callback";
-            const cilogon_client_id = "cilogon:/client_id/d00f2e2f70cbcd8ea1cab897f946e3a"; //testing, change later
-
-            const idpurl = `https://cilogon.org/authorize/?idphint=${this.selected}&response_type=code&client_id=${cilogon_client_id}&redirect_uri=${cilogon_redirect_uri}&scope=openid`;
-            window.location.href = idpurl;
-            //var win = window.open(idpurl, "_self");
-            //console.log(win);
-            //const cilogon_code = win.split('=')[1];
-            //console.log(cilogon_code);
-
-            /*axios
-                .post('https://cilogon.org/oauth2/token',
-                    { grant_type : 'authorization_code',
-                    client_id : cilogon_client_id,
-                    client_secret : cilogon_client_secret,
-                    code : cilogon_code,
-                    redirect_uri : cilogon_redirect_uri})
+            axios
+                .post(`${rootUrl}authnz/cilogon/login/?idphint=${this.selected}`)
                 .then(response => {
-                    console.log(response);
-                    console.log(response.data);
-                });*/
-
-            /*axios
-                .post(`${rootUrl}authnz/cilogon/login`)
-                .then(response => {
-                    console.log("in axios");
                     if (response.data.redirect_uri) {
                         window.location = response.data.redirect_uri;
                     }
@@ -250,28 +227,7 @@ export default {
                     this.messageVariant = "danger";
                     const message = error.response.data && error.response.data.err_msg;
                     this.messageText = message || "Login failed for an unknown reason.";
-                });*/
-            //const testing = window.location.href;
-            //const code = window.location.href.split('=');
-            //console.log(code);
-            //alert(code[1]);
-
-            /*axios
-                .post(`https://cilogon.org/oauth2/token/?code=${}&client_id=${client_id}&redirect_uri=${redirect_uri}`)
-                axios.post('https://cilogon.org/oauth2/token', { code : 'blah', ...})
-                //.post(`https://cilogon.org/authorize?response_type=code&client_id=myproxy:oa4mp,2012:/client_id/6e8fdae3459dac6c685c6b6de37c188c&redirect_uri=${rootUrl}&scope=openid+profile+email+org.cilogon.userinfo+edu.uiuc.ncsa.myproxy.getcert`)
-                .then(response => {
-                    console.log(response);
-                    console.log(response.data);
-                })
-                .catch(error => {
-                    this.messageVariant = "danger";
-                    const message = error.response.data && error.response.data.err_msg;
-                    this.messageText = message || "Login failed for an unknown reason.";
-                });*/
-            //console.log(result);
-
-            /*after get, receive a token, token is exchanged for information*/ 
+                });
         }
     },
     created() {

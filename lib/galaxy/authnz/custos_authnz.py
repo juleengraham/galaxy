@@ -13,6 +13,7 @@ from requests_oauthlib import OAuth2Session
 from galaxy import util
 from galaxy.model import CustosAuthnzToken, User
 from ..authnz import IdentityProvider
+from galaxy.security.validate_user_input import validate_email, validate_publicname
 
 log = logging.getLogger(__name__)
 STATE_COOKIE_NAME = 'custos-state'
@@ -45,7 +46,6 @@ class CustosAuthnz(IdentityProvider):
             realm = oidc_backend_config['realm']
             self._load_config_for_provider_and_realm(self.config['provider'], realm)
 
-    #edit here Juleen for cilogon state?
     def authenticate(self, trans, idphint=None):
         base_authorize_url = self._create_cilogon_authorize_url(idphint)
         oauth2_session = self._create_oauth2_session(scope=('openid', 'email', 'profile', 'org.cilogon.userinfo')) #maybe set state to be state_cookie like in callback
@@ -74,7 +74,7 @@ class CustosAuthnz(IdentityProvider):
         id_token = token['id_token']
         refresh_token = token['refresh_token'] if 'refresh_token' in token else None
         #expiration_time = datetime.now() + timedelta(seconds=token['expires_in'])
-        expiration_time = datetime.now() + timedelta(seconds=token.get('expires_in', 3600)) #revisit later Juleen, once CILogon bug fixed
+        expiration_time = datetime.now() + timedelta(seconds=token.get('expires_in', 3600)) #revisit later, once CILogon bug fixed
         refresh_expiration_time = (datetime.now() + timedelta(seconds=token['refresh_expires_in'])) if 'refresh_expires_in' in token else None
 
         # Get nonce from token['id_token'] and validate. 'nonce' in the
@@ -88,8 +88,8 @@ class CustosAuthnz(IdentityProvider):
         userinfo = self._get_userinfo(oauth2_session)
         log.debug("userinfo={}".format(json.dumps(userinfo, indent=True)))
         email = userinfo['email']
-        username = userinfo.get('preferred_username', email.split('@')[0]) #TBD handle is username already exists
-        #username = userinfo.get('preferred_username', self.generate_username(email)) #TBD handle is username already exists
+        #username = userinfo.get('preferred_username', email.split('@')[0]) #TBD handle is username already exists
+        username = userinfo.get('preferred_username', self.generate_username(trans, email)) #Check if username if already taken
         user_id = userinfo['sub']
 
         # Create or update custos_authnz_token record
@@ -227,10 +227,11 @@ class CustosAuthnz(IdentityProvider):
         else:
             return self.config['verify_ssl']
 
-    #def generate_username(email):
-    #    temp_username = email.split('@')[0]
-    #    count = 0
+    def generate_username(self, trans, email):
+        temp_username = email.split('@')[0] #username created from username portion of email
+        count = 0
 
-    #    while (temp_username in database):
-    #        count += 1
-    #    return temp_username if count == 0 else temp_username + str(count) #do I have 
+        while (trans.sa_session.query(trans.app.model.User).filter_by(username=(temp_username+str(count))).first()):
+        #if username already exists in database, append integer and iterate until unique username found
+            count += 1
+        return temp_username if count == 0 else temp_username + str(count)

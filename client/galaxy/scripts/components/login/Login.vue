@@ -41,27 +41,30 @@
             </div>
 
             <div class="col col-lg-6">
-                <div class="cilogon-prompt">
-                    <h2>Use your existing institutional login</h2>
-                    <span class="hint">e.g., university, lab, facility, project</span>
+                <div class="cilogon" v-if="cilogonShow">
+                    <!--Only Display if CILogon is configured-->
+                    <div class="cilogon-prompt">
+                        <h2>Use your existing institutional login</h2>
+                        <span class="hint">e.g., university, lab, facility, project</span>
+                    </div>
+                    
+                    <selectize v-model="selected" placeholder="Select your institution:">
+                        <option v-for="idp in cilogon_idps" :key="idp.EntityID" :value="idp.EntityID">
+                            {{ idp.DisplayName }}
+                        </option>
+                    </selectize>
+
+                    <b-button class="d-block mt-3" @click="submitCILogon()">
+                        <i v-bind:class="oidc_idps_icons[idp]"/> Sign in with Institutional Credentials*
+                    </b-button>
+
+                    <p>*Galaxy uses CILogon to enable you to Log In from this organization. 
+                        By clicking 'Sign In', you agree to the <a href="https://ca.cilogon.org/policy/privacy">
+                        CILogon privacy policy</a> and you agree to share your username, email address, and 
+                        affiliation with CILogon and Galaxy. You also agree for CILogon to issue a certificate 
+                        that allows Galaxy to act on your behalf.
+                    </p>
                 </div>
-
-                <select v-model="selected" id="cilogon-idps">
-                    <option disabled value="prompt">Select your institution:</option>
-                    <option v-for="idp in cilogon_idps" :key="idp.EntityID" :value="idp.EntityID">
-                        {{ idp.DisplayName }}
-                    </option>                    
-                </select>
-
-                <b-button class="d-block mt-3" @click="submitCILogon()">
-                    <i v-bind:class="oidc_idps_icons[idp]" /> Sign in with CILogon
-                </b-button>
-
-                <p>Galaxy uses CILogon to enable you to Log In from this organization. 
-                    By clicking Continue, you agree to the <a href="https://ca.cilogon.org/policy/privacy">
-                    CILogon privacy policy</a> and you agree to share your username, email address, and 
-                    affiliation with CILogon and Galaxy. You also agree for CILogon to issue a certificate 
-                    that allows Galaxy to act on your behalf.</p>
 
                 <!--<div v-for="idp in oidc_idps" :key="idp" style="margin:0.5em">
                     <span v-if="oidc_idps_icons[idp]">
@@ -76,11 +79,17 @@
                 </div>-->
 
                 <div>
-                    <b-button v-for="idp in oidc_idps" :key="idp" class="d-block mt-3" @click="submitOIDCLogin(idp)">
+                    <b-button v-for="idp in filtered_oidc_idps" :key="idp" class="d-block mt-3" @click="submitOIDCLogin(idp)">
                         <i v-bind:class="oidc_idps_icons[idp]" /> Sign in with
                         {{ idp.charAt(0).toUpperCase() + idp.slice(1) }}
                     </b-button>
                 </div>
+            </div>
+
+            <div>
+                <template v-if="showLinkAccount">
+                    <linkAccounts :show_welcome_with_login="show_welcome_with_login" :welcome_url="welcome_url" />
+                </template>
             </div>
             <div v-if="show_welcome_with_login" class="col">
                 <b-embed type="iframe" :src="welcome_url" aspect="1by1" />
@@ -92,6 +101,8 @@
 <script>
 import axios from "axios";
 import Vue from "vue";
+import Selectize from 'vue2-selectize';
+import LinkAccounts from "components/login/LinkAccounts.vue";
 import BootstrapVue from "bootstrap-vue";
 import { getGalaxyInstance } from "app";
 import { getAppRoot } from "onload";
@@ -99,6 +110,10 @@ import { getAppRoot } from "onload";
 Vue.use(BootstrapVue);
 
 export default {
+    components: {
+        Selectize,
+        linkAccounts: LinkAccounts
+    },
     props: {
         show_welcome_with_login: {
             type: Boolean,
@@ -139,12 +154,22 @@ export default {
             oidc_idps: oidc_idps,
             oidc_idps_icons: oidc_idps_icons,
             cilogon_idps: [],
-            selected: ''
+            selected: '',
+            linkPrompt: false
         };
     },
     computed: {
+        filtered_oidc_idps() {
+            return this.oidc_idps.filter(idp => idp != "cilogon");
+        },
+        cilogonShow() {
+            return this.oidc_idps.includes("cilogon");
+        },
         messageShow() {
             return this.messageText != null;
+        },
+        showLinkAccount() {
+            return this.linkPrompt;
         }
     },
     methods: {
@@ -219,8 +244,24 @@ export default {
             axios
                 .post(`${rootUrl}authnz/cilogon/login/?idphint=${this.selected}`)
                 .then(response => {
+                    console.log(response);
+                    console.log(response.data);
+                    /*if (response.data.message && response.data.status) {
+                        alert(response.data.message);
+                    }*/
                     if (response.data.redirect_uri) {
                         window.location = response.data.redirect_uri;
+                    }
+                    /*
+                        if user first time logging in, prompt and ask if want to connect to existing Galaxy account
+                        "Reminder: Registration and usage of multiple accounts is tracked and such accounts are subject to termination and data deletion."
+                    */
+
+                    console.log(response.data.status);
+                    if (response.data.status == 200 /*and user account created/user first time logging in*/) {
+                       this.linkPrompt = true;
+                       const Galaxy = getGalaxyInstance();
+                       Galaxy.router.push("/LinkAccounts.vue");
                     }
                 })
                 .catch(error => {
@@ -235,3 +276,7 @@ export default {
     }
 };
 </script>
+
+<style lang="scss">
+@import "~selectize/dist/css/selectize.bootstrap3.css";
+</style>

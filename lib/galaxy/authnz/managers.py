@@ -161,8 +161,9 @@ class AuthnzManager(object):
         return rtv
 
     def _unify_provider_name(self, provider):
-        if provider.lower() in self.oidc_backends_config:
-            return provider.lower()
+        provider = provider.lower()
+        if provider in self.oidc_backends_config:
+            return provider
         for k, v in BACKENDS_NAME.items():
             if v == provider:
                 return k.lower()
@@ -267,6 +268,7 @@ class AuthnzManager(object):
         :return: an identity provider specific authentication redirect URI.
         """
         try:
+            provider = provider.lower()
             success, message, backend = self._get_authnz_backend(provider, idphint=idphint)
             if success is False:
                 return False, message, None

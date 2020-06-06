@@ -63,6 +63,7 @@ class OIDC(JSAppLauncher):
     @web.expose
     def callback(self, trans, provider, idphint=None, **kwargs):
         user = trans.user.username if trans.user is not None else 'anonymous'
+        provider = provider.lower()
         if not bool(kwargs):
             log.error("OIDC callback received no data for provider `{}` and user `{}`".format(provider, user))
             return trans.show_error_message(

@@ -208,7 +208,7 @@ class CustosAuthnz(IdentityProvider):
 
     def _get_custos_authnz_token(self, sa_session, user_id, provider):
         return sa_session.query(CustosAuthnzToken).filter_by(
-            external_user_id=user_id, provider=provider).one_or_none()
+            external_user_id=user_id, provider=provider.lower()).one_or_none()
 
     def _hash_nonce(self, nonce):
         return hashlib.sha256(util.smart_str(nonce)).hexdigest()

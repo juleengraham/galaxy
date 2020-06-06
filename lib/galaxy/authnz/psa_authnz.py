@@ -92,7 +92,8 @@ DISCONNECT_PIPELINE = (
 
 class PSAAuthnz(IdentityProvider):
     def __init__(self, provider, oidc_config, oidc_backend_config):
-        self.config = {'provider': provider.lower()}
+        provider = provider.lower()
+        self.config = {'provider': provider}
         for key, value in oidc_config.items():
             self.config[setting_name(key)] = value
 
